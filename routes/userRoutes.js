@@ -2,7 +2,7 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const User = require('C:/Users/madks/Documents/FullStack/Project 2/models/User.js');
 const bcrypt = require('bcryptjs');
-const authenticateToken = require('C:/Users/madks/Documents/FullStack/Project 2/utils/authMiddleware.js'); // Подключаем middleware для аутентификации
+const authenticateToken = require('C:/Users/madks/Documents/FullStack/Project 2/utils/authMiddleware.js'); 
 const router = express.Router();
 
 const Joi = require('joi');
@@ -20,7 +20,7 @@ const loginSchema = Joi.object({
 
 
 
-// 1. Регистрация пользователя (POST /register)
+// 1. (POST /register)
 router.post('/register', async (req, res, next) => {
   const { error } = registerSchema.validate(req.body);
   if (error) {
@@ -38,11 +38,11 @@ router.post('/register', async (req, res, next) => {
 
     res.status(201).json({ message: 'Пользователь зарегистрирован успешно!' });
   } catch (error) {
-    next(error); // Передача ошибки в централизованный обработчик
+    next(error); 
   }
 });
 
-// 2. Вход пользователя (POST /login)
+// 2. (POST /login)
 router.post('/login', async (req, res, next) => {
   const { error } = loginSchema.validate(req.body);
   if (error) {
@@ -55,32 +55,32 @@ router.post('/login', async (req, res, next) => {
       return res.status(404).json({ message: 'Пользователь не найден.' });
     }
 
-    // Проверка пароля
+    
     const isValidPassword = await bcrypt.compare(password, user.password);
     if (!isValidPassword) {
       return res.status(400).json({ message: 'Неверный пароль.' });
     }
 
-    // Генерация accessToken и refreshToken
+    // Generating accessToken and refreshToken
     const accessToken = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, { expiresIn: '15m' });
     const refreshToken = jwt.sign({ _id: user._id }, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
 
-    // Сохраняем refreshToken в базе данных
+    // Saving refreshToken in database
     user.refreshToken = refreshToken;
     await user.save();
 
     // Ответ с токенами
     res.status(200).json({
-      accessToken,        // Отправляем accessToken
-      refreshToken,       // Отправляем refreshToken
+      accessToken,        // sending accessToken
+      refreshToken,       // sending refreshToken
       message: 'Успешный вход в систему!'
     });
   } catch (error) {
-    next(error); // Перехват ошибки и передача в централизованный обработчик
+    next(error); 
   }
 });
 
-// 3. Получение профиля пользователя (GET /profile)
+// 3. (GET /profile)
 router.get('/profile', authenticateToken, async (req, res, next) => {
   try {
     const user = await User.findById(req.user._id).select('username email');
@@ -98,18 +98,16 @@ router.get('/profile', authenticateToken, async (req, res, next) => {
 });
 
 
-// 4. Обновление пользователя (PUT /profile)
+// 4. (PUT /profile)
 router.put('/profile', authenticateToken, async (req, res) => {
   const { username, email, password } = req.body;
 
   try {
-    // Ищем пользователя по ID из токена
     const user = await User.findById(req.user._id);
     if (!user) {
       return res.status(404).json({ message: 'Пользователь не найден.' });
     }
 
-    // Обновляем данные
     if (username) user.username = username;
     if (email) user.email = email;
     if (password) user.password = await bcrypt.hash(password, 10);
@@ -122,7 +120,7 @@ router.put('/profile', authenticateToken, async (req, res) => {
   }
 });
 
-// 5. Удаление пользователя (DELETE /profile)
+// 5. (DELETE /profile)
 router.delete('/profile', authenticateToken, async (req, res) => {
   try {
     // Удаляем пользователя по ID из токена
@@ -137,7 +135,7 @@ router.delete('/profile', authenticateToken, async (req, res) => {
   }
 });
 
-// 6. Выход пользователя (POST /logout)
+// 6. (POST /logout)
 router.post('/logout', async (req, res, next) => {
   const { refreshToken } = req.body;
   if (!refreshToken) {
@@ -145,7 +143,6 @@ router.post('/logout', async (req, res, next) => {
   }
 
   try {
-    // Находим пользователя по refresh token и обновляем его значение на null
     const user = await User.findOneAndUpdate({ refreshToken }, { refreshToken: null });
     if (!user) {
       return res.status(404).json({ message: 'Пользователь не найден.' });
@@ -153,7 +150,7 @@ router.post('/logout', async (req, res, next) => {
 
     res.status(200).json({ message: 'Вы успешно вышли из системы.' });
   } catch (error) {
-    next(error); // Перехват ошибки и передача в централизованный обработчик
+    next(error); 
   }
 });
 
@@ -170,7 +167,7 @@ router.post('/refresh-token', async (req, res, next) => {
       return res.status(403).json({ message: 'Неверный refresh token.' });
     }
 
-    // Генерация нового access token
+    // Generating new access token
     const accessToken = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, { expiresIn: '15m' });
     res.status(200).json({ accessToken });
   } catch (error) {
