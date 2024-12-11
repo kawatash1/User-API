@@ -30,13 +30,13 @@ router.post('/register', async (req, res, next) => {
     const { username, email, password } = req.body;
     const existingUser = await User.findOne({ $or: [{ email }, { username }] });
     if (existingUser) {
-      return res.status(400).json({ message: 'Пользователь уже существует.' });
+      return res.status(400).json({ message: 'User already exists.' });
     }
 
     const newUser = new User({ username, email, password });
     await newUser.save();
 
-    res.status(201).json({ message: 'Пользователь зарегистрирован успешно!' });
+    res.status(201).json({ message: 'User registered successfully!' });
   } catch (error) {
     next(error); 
   }
@@ -52,13 +52,13 @@ router.post('/login', async (req, res, next) => {
     const { email, password } = req.body;
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(404).json({ message: 'Пользователь не найден.' });
+      return res.status(404).json({ message: 'User not found.' });
     }
 
     
     const isValidPassword = await bcrypt.compare(password, user.password);
     if (!isValidPassword) {
-      return res.status(400).json({ message: 'Неверный пароль.' });
+      return res.status(400).json({ message: 'Invalid password.' });
     }
 
     // Generating accessToken and refreshToken
@@ -73,7 +73,7 @@ router.post('/login', async (req, res, next) => {
     res.status(200).json({
       accessToken,        // sending accessToken
       refreshToken,       // sending refreshToken
-      message: 'Успешный вход в систему!'
+      message: 'Successful login!'
     });
   } catch (error) {
     next(error); 
@@ -85,7 +85,7 @@ router.get('/profile', authenticateToken, async (req, res, next) => {
   try {
     const user = await User.findById(req.user._id).select('username email');
     if (!user) {
-      return res.status(404).json({ message: 'Пользователь не найден.' });
+      return res.status(404).json({ message: 'User not found.' });
     }
 
     res.status(200).json({
@@ -105,7 +105,7 @@ router.put('/profile', authenticateToken, async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
     if (!user) {
-      return res.status(404).json({ message: 'Пользователь не найден.' });
+      return res.status(404).json({ message: 'User not found.' });
     }
 
     if (username) user.username = username;
@@ -114,7 +114,7 @@ router.put('/profile', authenticateToken, async (req, res) => {
 
     await user.save();
 
-    res.status(200).json({ message: 'Профиль обновлён успешно!' });
+    res.status(200).json({ message: 'Profile updated successfully!' });
   }  catch (error) {
     next(error); // Passing an error to a centralized handler
   }
@@ -126,10 +126,10 @@ router.delete('/profile', authenticateToken, async (req, res) => {
     // Удаляем пользователя по ID из токена
     const user = await User.findByIdAndDelete(req.user._id);
     if (!user) {
-      return res.status(404).json({ message: 'Пользователь не найден.' });
+      return res.status(404).json({ message: 'User not found.' });
     }
 
-    res.status(200).json({ message: 'Пользователь удалён успешно!' });
+    res.status(200).json({ message: 'User deleted successfully!' });
   } catch (error) {
     next(error); // Passing an error to a centralized handler
   }
@@ -139,16 +139,16 @@ router.delete('/profile', authenticateToken, async (req, res) => {
 router.post('/logout', async (req, res, next) => {
   const { refreshToken } = req.body;
   if (!refreshToken) {
-    return res.status(401).json({ message: 'Refresh token отсутствует.' });
+    return res.status(401).json({ message: 'No Refresh token.' });
   }
 
   try {
     const user = await User.findOneAndUpdate({ refreshToken }, { refreshToken: null });
     if (!user) {
-      return res.status(404).json({ message: 'Пользователь не найден.' });
+      return res.status(404).json({ message: 'User not found.' });
     }
 
-    res.status(200).json({ message: 'Вы успешно вышли из системы.' });
+    res.status(200).json({ message: 'You have successfully logged out.' });
   } catch (error) {
     next(error); 
   }
@@ -157,14 +157,14 @@ router.post('/logout', async (req, res, next) => {
 router.post('/refresh-token', async (req, res, next) => {
   const { refreshToken } = req.body;
   if (!refreshToken) {
-    return res.status(401).json({ message: 'Refresh token отсутствует.' });
+    return res.status(401).json({ message: 'No Refresh token.' });
   }
 
   try {
     const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
     const user = await User.findById(decoded._id);
     if (!user || user.refreshToken !== refreshToken) {
-      return res.status(403).json({ message: 'Неверный refresh token.' });
+      return res.status(403).json({ message: 'Incorrect refresh token.' });
     }
 
     // Generating new access token
