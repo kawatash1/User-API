@@ -18,28 +18,28 @@ app.use(express.json()); // Для парсинга JSON в теле запро�
 app.use(cors()); // Для разрешения кросс-доменных запросов
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 })); // 100 запросов за 15 минут
 
-// Подключение маршрутов
+// Routes connecting
 const userRoutes = require('c:/Users/madks/Documents/FullStack/Project 2/routes/userRoutes');
 app.use('/api/users', userRoutes); // Подключаем маршруты пользователей
 
-// Подключение к базе данных MongoDB
+// Connecting to database MongoDB
 const DB_URL = process.env.MONGO_URI; // Строка подключения к базе из переменной окружения
 mongoose.connect(DB_URL)
-  .then(() => console.log('MongoDB подключен'))
-  .catch(err => console.error('Ошибка подключения к MongoDB:', err));
+  .then(() => console.log('MongoDB connected'))
+  .catch(err => console.error('Error connecting to MongoDB:', err));
 
 
 app.use((err, req, res, next) => {
-  console.error('Ошибка:', err.message);
-  res.status(err.status || 500).json({ message: err.message || 'Произошла ошибка сервера.' });
+  console.error('Error:', err.message);
+  res.status(err.status || 500).json({ message: err.message || 'Server Error.' });
 });
 
 // Запуск сервера
 const PORT = process.env.PORT || 5000; // Используем порт из переменной окружения или 5000 по умолчанию
 app.get('/', (req, res) => {
-  res.send('Сервер работает! 🚀');
+  res.send('Server is working! 🚀');
 });
 
 app.listen(PORT, () => {
-  console.log(`Сервер запущен на порту ${PORT}`);
+  console.log(`Server is working on port: ${PORT}`);
 });
